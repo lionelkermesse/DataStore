@@ -1,0 +1,2 @@
+serviceClass: com.google.gwt.datastore.client.UserStoreService
+path: E5CFD7DC680C8C2E7FAEC8396263DEF2.gwt.rpc
