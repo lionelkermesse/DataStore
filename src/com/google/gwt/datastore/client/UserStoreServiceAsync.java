@@ -14,4 +14,6 @@ public interface UserStoreServiceAsync {
 
 	void getAllEmployees(AsyncCallback<Employee[]> callback);
 
+	void deleteAllEmployees(AsyncCallback<Void> callback);
+
 }

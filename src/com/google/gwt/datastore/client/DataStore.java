@@ -41,6 +41,11 @@ public class DataStore implements EntryPoint {
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
+//		userStoreSvc.deleteAllEmployees(new AsyncCallback<Void>() {
+//			public void onSuccess(Void result) {}
+//			public void onFailure(Throwable caught) {}
+//		});
+		
 		flexTable.setText(0, 0, "Id");
 		flexTable.setText(0, 1, "Name");
 		flexTable.setText(0, 2, "Email");
@@ -65,7 +70,7 @@ public class DataStore implements EntryPoint {
 		refreshTable(); 
 	}
 	
-	// Add an employee
+	// Add a new employee
 	private void addEmployee(){
 		String name = nameTextBox.getText().trim();
 		String email = emailTextBox.getText().trim();
@@ -80,30 +85,9 @@ public class DataStore implements EntryPoint {
 		}
 		
 		final Employee e = new Employee(name, email);
-
 		userStoreSvc = GWT.create(UserStoreService.class);
 		userStoreSvc.addEmployee(e, new AsyncCallback<Void>() {
 			public void onSuccess(Void result) {
-				displayTable(e);
-			}
-			
-			public void onFailure(Throwable caught) {}
-		});
-	}
-	
-	
-	
-	
-	private void modifyEmployee(Employee e) {
-		refreshTable();
-	}
-
-	private void deleteEmployee(final Employee e) {
-		userStoreSvc = GWT.create(UserStoreService.class);
-		userStoreSvc.deleteEmployee(e, new AsyncCallback<Void>() {
-			public void onSuccess(Void result) {
-				int row = emails.indexOf(e.getEmail());
-				emails.remove(row);
 				refreshTable();
 			}
 
@@ -111,10 +95,48 @@ public class DataStore implements EntryPoint {
 		});
 	}
 	
+	// Delete an employee
+	private void deleteEmployee(final Employee e) {
+		userStoreSvc = GWT.create(UserStoreService.class);
+		userStoreSvc.deleteEmployee(e, new AsyncCallback<Void>() {
+			public void onSuccess(Void result) {
+				refreshTable();
+			}
+
+			public void onFailure(Throwable caught) {}
+		});
+	}
+	
+	//Modify employee data
+	private void modifyEmployee(Employee e) {
+		refreshTable();
+	}
+
+	// Update the flexTable.	
+	private void refreshTable() {
+		userStoreSvc = GWT.create(UserStoreService.class);
+		AsyncCallback<Employee[]> usAsync = new AsyncCallback<Employee[]>() {
+			public void onSuccess(Employee[] result) {
+				emails.clear();
+				employees.clear();
+				clearFlexTable();
+				udpdateTable(result);
+			}
+			
+			public void onFailure(Throwable caught) {}
+		};
+		
+		userStoreSvc.getAllEmployees(usAsync);
+	}
+	
+	protected void udpdateTable(Employee[] result) {
+		for (Employee e : result) {
+			displayTable(e);
+		}
+	}
+
+	// Display the state state of the table
 	private void displayTable(final Employee e){
-		
-		emails.add(e.getEmail());
-		
 		deleteButton = new Button("X");
 		deleteButton.addClickHandler(new ClickHandler() {
 			public void onClick(ClickEvent event) {
@@ -129,46 +151,22 @@ public class DataStore implements EntryPoint {
 			}
 		});
 		
-		employees.add(e);
 		emails.add(e.getEmail());
+		employees.add(e);
 		
 		int row  = flexTable.getRowCount();
-		flexTable.setText(row, 0, "##");
+		flexTable.setText(row, 0, "#");
 		flexTable.setText(row, 1, e.getName());
 		flexTable.setText(row, 2, e.getEmail());
 		flexTable.setWidget(row, 3, modifyButton);
 		flexTable.setWidget(row, 4, deleteButton);
-		
-		refreshTable();
 	}
 	
-	// Update the flexTable.	
-	private void refreshTable() {
-		userStoreSvc = GWT.create(UserStoreService.class);
-		AsyncCallback<Employee[]> usAsync = new AsyncCallback<Employee[]>() {
-			public void onSuccess(Employee[] result) {
-				udpdateTable(result);
-			}
-			
-			public void onFailure(Throwable caught) {}
-		};
-		
-		userStoreSvc.getAllEmployees(usAsync);
-	}
-	
-	protected void udpdateTable(Employee[] result) {
-		for (Employee employee : result) {
-			updateTable(employee);
+	public void clearFlexTable(){
+		int row = flexTable.getRowCount()-1;
+		while(row>0){ 
+			flexTable.removeRow(row);
+			row = flexTable.getRowCount()-1;
 		}
 	}
-
-	private void updateTable(final Employee e){
-		if(!emails.contains(e.getEmail()))
-			return;
-		
-		int row = emails.indexOf(e.getEmail());
-		flexTable.setText(row, 1, e.getName());
-		flexTable.setText(row, 2, e.getEmail());
-	}
-	
 }
